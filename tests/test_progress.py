@@ -161,3 +161,22 @@ def test_weakest_category_tie_does_not_depend_on_entry_order() -> None:
     reversed_scores = dict(reversed(scores.items()))
     result = scoring.summarize_progress([make_record(reversed_scores)])
     assert result.weakest_category == "Decomposition"
+
+
+# --- T6: unknown category names are ignored --------------------------------
+
+
+def test_weakest_category_ignores_unknown_names() -> None:
+    record = make_record({**EVEN_SCORES, "Decomposition": 2, "Made-up category": 0})
+    assert scoring.summarize_progress([record]).weakest_category == "Decomposition"
+
+
+def test_weakest_category_matches_names_exactly() -> None:
+    record = make_record({**EVEN_SCORES, "Decomposition": 2, "communication": 0})
+    assert scoring.summarize_progress([record]).weakest_category == "Decomposition"
+
+
+def test_weakest_category_is_none_when_only_unknown_names_are_saved() -> None:
+    result = scoring.summarize_progress([make_record({"Made-up category": 1})])
+    assert result.weakest_category is None
+    assert result.rounds_practised == 1
