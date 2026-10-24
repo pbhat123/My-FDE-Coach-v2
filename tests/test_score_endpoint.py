@@ -48,3 +48,14 @@ def test_score_still_saves_existing_fields(results_file: Path) -> None:
     assert record["question_id"] == ANSWER["question_id"]
     assert record["total"] == body["total"]
     assert record["max"] == body["max"]
+
+
+def test_progress_after_scoring_reports_first_rubric_category_as_weakest(
+    results_file: Path,
+) -> None:
+    # The mock scorer gives every category the same score, so the tie-break decides.
+    client.post("/score", json=ANSWER)
+    client.post("/score", json=ANSWER)
+    body = client.get("/progress").json()
+    assert body["rounds_practised"] == len(saved_records(results_file))
+    assert body["weakest_category"] == scoring.RUBRIC_CATEGORIES[0]
