@@ -44,10 +44,12 @@ reviewable commit. Criteria refer to `spec.md`.
   first rubric category. The result is the same regardless of record order.
 - Covers: AC7
 
-## T6 — Ignore unknown category names
-- Names not in `RUBRIC_CATEGORIES` are ignored when computing averages.
-- Tests: an unknown name with a very low score never wins; a record containing
-  only unknown names counts as having no category data (`null`).
+## T6 — Ignore unknown category names (test-only)
+- No code change: the guard landed in T3 so we never committed a known crash.
+  This task pins the behaviour with tests.
+- Tests: an unknown name with a very low score never wins; names are matched
+  exactly (a wrong-case name is ignored); a record containing only unknown
+  names counts as having no category data (`null`).
 - Covers: AC12, AC8
 
 ## T7 — End-to-end check and quality gate
