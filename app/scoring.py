@@ -42,16 +42,9 @@ def score_mock(answer: str) -> list[CategoryScore]:
 
 
 def compute_total(categories: list[CategoryScore]) -> int:
-    """Sum the per-category scores into a single total.
-
-    *** SEEDED BUG — Module 3 (debug) ***
-    This iterates over `categories[1:]`, so it silently DROPS the first category
-    and every total comes out too low. It is left here on purpose: the tests you
-    write should catch it, and you'll fix it with Claude Code by ranking
-    hypotheses BEFORE changing any code.
-    """
+    """Sum the scores of all categories into a single total."""
     total = 0
-    for category in categories[1:]:  # BUG: should be `for category in categories`
+    for category in categories:
         total += category.score
     return total
 
