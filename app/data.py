@@ -38,3 +38,9 @@ def save_result(record: dict) -> None:
     results = json.loads(path.read_text(encoding="utf-8"))
     results.append(record)
     path.write_text(json.dumps(results, indent=2), encoding="utf-8")
+
+
+def load_results() -> list[dict]:
+    """Return every saved result from data/results.json."""
+    path = DATA_DIR / "results.json"
+    return json.loads(path.read_text(encoding="utf-8"))

@@ -40,3 +40,10 @@ class ScoreResponse(BaseModel):
     max: int
     categories: list[CategoryScore]
     summary: str
+
+
+class ProgressResponse(BaseModel):
+    """Body returned by GET /progress."""
+
+    rounds_practised: int
+    average_total: float

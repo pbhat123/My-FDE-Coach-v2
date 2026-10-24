@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "round": "decomposition",
+    "question_id": "dec-01",
+    "total": 3,
+    "max": 20
+  },
+  {
+    "round": "decomposition",
+    "question_id": "dec-01",
+    "total": 3,
+    "max": 20
+  },
+  {
+    "round": "decomposition",
+    "question_id": "dec-01",
+    "total": 3,
+    "max": 20
+  }
+]
