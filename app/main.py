@@ -45,6 +45,9 @@ def post_score(request: ScoreRequest) -> ScoreResponse:
             "question_id": request.question_id,
             "total": scorecard.total,
             "max": scorecard.max,
+            "categories": [
+                {"name": c.name, "score": c.score} for c in scorecard.categories
+            ],
         }
     )
     return scorecard
