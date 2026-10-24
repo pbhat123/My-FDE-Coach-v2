@@ -33,9 +33,10 @@ name. Criterion 12 limits the damage: unknown names are ignored, not crashed on.
    lowest average score across all saved results.
 4. **No results yet:** `weakest_category` is `null`; `rounds_practised` is 0 and
    `average_total` is 0.0 as today; status is 200.
-5. **Old records without category data:** records with no `categories` key are
-   skipped for `weakest_category` but still count toward `rounds_practised` and
-   `average_total`. If *no* record has category data, `weakest_category` is `null`.
+5. **Old records without category data:** records with no `categories` key, or
+   an empty `categories` list, are skipped for `weakest_category` but still count
+   toward `rounds_practised` and `average_total`. If *no* record has category
+   data, `weakest_category` is `null`.
 6. **Mixed old and new records:** averages are computed only from records that
    have category data.
 7. **Ties:** if two or more categories share the lowest average, the one that
