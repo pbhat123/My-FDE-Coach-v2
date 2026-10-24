@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "interview-guides": {
+      "type": "stdio",
+      "command": "/Users/home/PycharmProjects/My-FDE-Coach/.venv/bin/python",
+      "args": [
+        "/Users/home/PycharmProjects/My-FDE-Coach/mcp/server.py"
+      ],
+      "env": {}
+    }
+  }
+}
