@@ -12,7 +12,7 @@ During Module 3 you will, with Claude Code:
 from __future__ import annotations
 
 from .config import USE_MOCK
-from .models import CategoryScore, ScoreResponse
+from .models import CategoryScore, ProgressResponse, ScoreResponse
 
 # The four things every answer is scored on (mirrors data/rubric.md).
 RUBRIC_CATEGORIES = [
@@ -21,6 +21,19 @@ RUBRIC_CATEGORIES = [
     "Risk identification",
     "Communication",
 ]
+
+EMPTY_AVERAGE = 0.0
+AVERAGE_DECIMALS = 1
+
+FULL_MARKS_TOTAL = 20
+FULL_MARKS_SUMMARY = "Strong answer - full marks"
+# (minimum total, summary), checked from the highest band down.
+SUMMARY_BANDS = [
+    (16, "Strong answer"),
+    (10, "Solid, with gaps"),
+    (5, "Needs work"),
+]
+LOWEST_SUMMARY = "Needs significant work"
 
 
 def score_mock(answer: str) -> list[CategoryScore]:
@@ -39,47 +52,30 @@ def score_mock(answer: str) -> list[CategoryScore]:
 
 
 def compute_total(categories: list[CategoryScore]) -> int:
-    """Sum the per-category scores into a single total.
-
-    *** SEEDED BUG — Module 3 (debug) ***
-    This iterates over `categories[1:]`, so it silently DROPS the first category
-    and every total comes out too low. It is left here on purpose: the tests you
-    write should catch it, and you'll fix it with Claude Code by ranking
-    hypotheses BEFORE changing any code.
-    """
+    """Sum the scores of all categories into a single total."""
     total = 0
-    for category in categories[1:]:  # BUG: should be `for category in categories`
+    for category in categories:
         total += category.score
     return total
 
 
-def format_scorecard(categories: list[CategoryScore]) -> ScoreResponse:
-    """Assemble the final ScoreResponse from the category scores.
+def summarize_total(total: int) -> str:
+    """Return the summary band for a total score."""
+    if total == FULL_MARKS_TOTAL:
+        return FULL_MARKS_SUMMARY
+    for minimum, summary in SUMMARY_BANDS:
+        if total >= minimum:
+            return summary
+    return LOWEST_SUMMARY
 
-    *** UGLY FUNCTION — Module 3 (refactor) ***
-    Deeply nested, repeats itself, and hides magic numbers/strings. It works,
-    but you'll refactor it into something small and flat with Claude Code while
-    keeping the tests green the whole way.
-    """
+
+def format_scorecard(categories: list[CategoryScore]) -> ScoreResponse:
+    """Assemble the final ScoreResponse from the category scores."""
     total = compute_total(categories)
-    maximum = 0
-    for c in categories:
-        maximum = maximum + c.max
-    if total >= 16:
-        summary = "Strong answer"
-        if total == 20:
-            summary = "Strong answer - full marks"
-        else:
-            summary = "Strong answer"
-    else:
-        if total >= 10:
-            summary = "Solid, with gaps"
-        else:
-            if total >= 5:
-                summary = "Needs work"
-            else:
-                summary = "Needs significant work"
-    return ScoreResponse(total=total, max=maximum, categories=categories, summary=summary)
+    maximum = sum(c.max for c in categories)
+    return ScoreResponse(
+        total=total, max=maximum, categories=categories, summary=summarize_total(total)
+    )
 
 
 def score_with_openai(answer: str) -> list[CategoryScore]:
@@ -99,3 +95,29 @@ def score_answer(answer: str) -> ScoreResponse:
     """Score one answer end to end (mock offline, OpenAI when a key is set)."""
     categories = score_with_openai(answer) if not USE_MOCK else score_mock(answer)
     return format_scorecard(categories)
+
+
+def summarize_progress(results: list[dict]) -> ProgressResponse:
+    """Count the practised rounds, average their totals, and find the weakest category."""
+    if not results:
+        return ProgressResponse(rounds_practised=0, average_total=EMPTY_AVERAGE)
+    average = sum(r["total"] for r in results) / len(results)
+    return ProgressResponse(
+        rounds_practised=len(results),
+        average_total=round(average, AVERAGE_DECIMALS),
+        weakest_category=find_weakest_category(results),
+    )
+
+
+def find_weakest_category(results: list[dict]) -> str | None:
+    """Return the rubric category with the lowest average score, if any."""
+    scores_by_category: dict[str, list[int]] = {name: [] for name in RUBRIC_CATEGORIES}
+    for record in results:
+        for entry in record.get("categories", []):
+            if entry["name"] not in scores_by_category:
+                continue
+            scores_by_category[entry["name"]].append(entry["score"])
+    averages = {name: sum(s) / len(s) for name, s in scores_by_category.items() if s}
+    if not averages:
+        return None
+    return min(averages, key=averages.__getitem__)

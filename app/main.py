@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
 
-from . import data
-from .models import CategoryScore, Question, ScoreRequest, ScoreResponse
+from . import data, scoring
+from .models import ProgressResponse, Question, ScoreRequest, ScoreResponse
 
 app = FastAPI(title="FDE Interview Prep Assistant")
 
@@ -37,15 +37,23 @@ def get_questions(round: str) -> list[Question]:
 
 @app.post("/score")
 def post_score(request: ScoreRequest) -> ScoreResponse:
-    """Score a candidate's answer against the rubric.
-
-    STUB (Module 3 - build): right now this returns a fixed placeholder.
-    During the workshop you'll wire it to scoring.score_answer(request.answer)
-    so it returns real per-category scores and saves the result.
-    """
-    placeholder = [
-        CategoryScore(name="Clarifying questions", score=0, feedback="not scored yet"),
-    ]
-    return ScoreResponse(
-        total=0, max=5, categories=placeholder, summary="Scoring not implemented yet"
+    """Score a candidate's answer against the rubric and save the result."""
+    scorecard = scoring.score_answer(request.answer)
+    data.save_result(
+        {
+            "round": request.round,
+            "question_id": request.question_id,
+            "total": scorecard.total,
+            "max": scorecard.max,
+            "categories": [
+                {"name": c.name, "score": c.score} for c in scorecard.categories
+            ],
+        }
     )
+    return scorecard
+
+
+@app.get("/progress")
+def get_progress() -> ProgressResponse:
+    """Return how many rounds were practised and the average total score."""
+    return scoring.summarize_progress(data.load_results())
