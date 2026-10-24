@@ -14,6 +14,8 @@ The project has two layers:
 - **The product** is a FastAPI service plus a Claude Code skill. Together they run mock rounds, score them out of 20, track progress over time, and identify your weakest rubric category.
 - **The process** is the build itself. It was done end to end with a coding agent (Claude Code) under human direction: plan before coding, test-first, hooks as guardrails, MCP tools, and spec-driven delivery. That workflow is the skill the FDE "AI-assisted pair-coding" interview round assesses.
 
+![FastAPI docs showing the five endpoints and schemas](docs/images/api-endpoints.png)
+
 ---
 
 ## 2️⃣ Background & Problem Context
