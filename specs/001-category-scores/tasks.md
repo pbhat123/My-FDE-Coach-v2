@@ -26,6 +26,9 @@ reviewable commit. Criteria refer to `spec.md`.
 ## T3 — Compute the weakest category (happy path)
 - In `app/scoring.py`, add a small helper that averages scores per category and
   returns the lowest; call it from `summarize_progress`.
+- The helper also skips records with no `categories` key and category names not
+  in `RUBRIC_CATEGORIES`, so it never raises on old or unexpected data. T4–T6
+  pin that behaviour with tests only.
 - Tests: records with distinct averages return the expected category; the result
   is always in `RUBRIC_CATEGORIES`.
 - Covers: AC3, AC8
