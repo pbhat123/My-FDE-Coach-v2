@@ -12,6 +12,9 @@ from app.main import app
 
 client = TestClient(app)
 
+EVEN_SCORES = {name: 4 for name in scoring.RUBRIC_CATEGORIES}
+OLD_RECORD = {"round": "decomposition", "question_id": "q", "total": 20, "max": 20}
+
 
 @pytest.fixture
 def results_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
@@ -119,3 +122,21 @@ def test_progress_endpoint_returns_weakest_category(results_file: Path) -> None:
     )
     results_file.write_text(json.dumps([record]), encoding="utf-8")
     assert client.get("/progress").json()["weakest_category"] == "Decomposition"
+
+
+# --- T4: records without category data -------------------------------------
+
+
+def test_weakest_category_is_none_when_no_record_has_category_data() -> None:
+    results = [OLD_RECORD, {**OLD_RECORD, "categories": []}]
+    result = scoring.summarize_progress(results)
+    assert result.weakest_category is None
+    assert result.rounds_practised == len(results)
+
+
+def test_weakest_category_ignores_old_records_but_still_counts_them() -> None:
+    new_record = make_record({**EVEN_SCORES, "Communication": 1})  # total 13
+    result = scoring.summarize_progress([OLD_RECORD, new_record])
+    assert result.weakest_category == "Communication"
+    assert result.rounds_practised == 2
+    assert result.average_total == 16.5  # (20 + 13) / 2
