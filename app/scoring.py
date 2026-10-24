@@ -25,6 +25,16 @@ RUBRIC_CATEGORIES = [
 EMPTY_AVERAGE = 0.0
 AVERAGE_DECIMALS = 1
 
+FULL_MARKS_TOTAL = 20
+FULL_MARKS_SUMMARY = "Strong answer - full marks"
+# (minimum total, summary), checked from the highest band down.
+SUMMARY_BANDS = [
+    (16, "Strong answer"),
+    (10, "Solid, with gaps"),
+    (5, "Needs work"),
+]
+LOWEST_SUMMARY = "Needs significant work"
+
 
 def score_mock(answer: str) -> list[CategoryScore]:
     """A tiny deterministic scorer used when there is no OpenAI key.
@@ -49,33 +59,23 @@ def compute_total(categories: list[CategoryScore]) -> int:
     return total
 
 
-def format_scorecard(categories: list[CategoryScore]) -> ScoreResponse:
-    """Assemble the final ScoreResponse from the category scores.
+def summarize_total(total: int) -> str:
+    """Return the summary band for a total score."""
+    if total == FULL_MARKS_TOTAL:
+        return FULL_MARKS_SUMMARY
+    for minimum, summary in SUMMARY_BANDS:
+        if total >= minimum:
+            return summary
+    return LOWEST_SUMMARY
 
-    *** UGLY FUNCTION — Module 3 (refactor) ***
-    Deeply nested, repeats itself, and hides magic numbers/strings. It works,
-    but you'll refactor it into something small and flat with Claude Code while
-    keeping the tests green the whole way.
-    """
+
+def format_scorecard(categories: list[CategoryScore]) -> ScoreResponse:
+    """Assemble the final ScoreResponse from the category scores."""
     total = compute_total(categories)
-    maximum = 0
-    for c in categories:
-        maximum = maximum + c.max
-    if total >= 16:
-        summary = "Strong answer"
-        if total == 20:
-            summary = "Strong answer - full marks"
-        else:
-            summary = "Strong answer"
-    else:
-        if total >= 10:
-            summary = "Solid, with gaps"
-        else:
-            if total >= 5:
-                summary = "Needs work"
-            else:
-                summary = "Needs significant work"
-    return ScoreResponse(total=total, max=maximum, categories=categories, summary=summary)
+    maximum = sum(c.max for c in categories)
+    return ScoreResponse(
+        total=total, max=maximum, categories=categories, summary=summarize_total(total)
+    )
 
 
 def score_with_openai(answer: str) -> list[CategoryScore]:
