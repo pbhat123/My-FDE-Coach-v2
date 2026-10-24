@@ -98,11 +98,26 @@ def score_answer(answer: str) -> ScoreResponse:
 
 
 def summarize_progress(results: list[dict]) -> ProgressResponse:
-    """Count the practised rounds and average their total scores."""
+    """Count the practised rounds, average their totals, and find the weakest category."""
     if not results:
         return ProgressResponse(rounds_practised=0, average_total=EMPTY_AVERAGE)
     average = sum(r["total"] for r in results) / len(results)
     return ProgressResponse(
         rounds_practised=len(results),
         average_total=round(average, AVERAGE_DECIMALS),
+        weakest_category=find_weakest_category(results),
     )
+
+
+def find_weakest_category(results: list[dict]) -> str | None:
+    """Return the rubric category with the lowest average score, if any."""
+    scores_by_category: dict[str, list[int]] = {name: [] for name in RUBRIC_CATEGORIES}
+    for record in results:
+        for entry in record.get("categories", []):
+            if entry["name"] not in scores_by_category:
+                continue
+            scores_by_category[entry["name"]].append(entry["score"])
+    averages = {name: sum(s) / len(s) for name, s in scores_by_category.items() if s}
+    if not averages:
+        return None
+    return min(averages, key=averages.__getitem__)

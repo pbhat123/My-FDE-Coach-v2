@@ -28,6 +28,17 @@ def write_totals(path: Path, totals: list[int]) -> None:
     path.write_text(json.dumps(records), encoding="utf-8")
 
 
+def make_record(scores: dict[str, int]) -> dict:
+    """A saved result whose category scores are given by name."""
+    return {
+        "round": "decomposition",
+        "question_id": "q",
+        "total": sum(scores.values()),
+        "max": 20,
+        "categories": [{"name": n, "score": s} for n, s in scores.items()],
+    }
+
+
 def test_progress_empty_results_returns_zeros(results_file: Path) -> None:
     resp = client.get("/progress")
     assert resp.status_code == 200
@@ -66,3 +77,45 @@ def test_progress_rounds_average_to_one_decimal(results_file: Path) -> None:
     write_totals(results_file, [10, 11, 11])
     body = client.get("/progress").json()
     assert body["average_total"] == 10.7
+
+
+def test_summarize_progress_weakest_category_has_lowest_average() -> None:
+    results = [
+        make_record(
+            {
+                "Clarifying questions": 4,
+                "Decomposition": 3,
+                "Risk identification": 1,
+                "Communication": 4,
+            }
+        ),
+        make_record(
+            {
+                "Clarifying questions": 2,
+                "Decomposition": 5,
+                "Risk identification": 3,
+                "Communication": 4,
+            }
+        ),
+    ]
+    # Averages: Clarifying 3.0, Decomposition 4.0, Risk 2.0, Communication 4.0
+    assert scoring.summarize_progress(results).weakest_category == "Risk identification"
+
+
+def test_summarize_progress_weakest_category_is_a_rubric_category() -> None:
+    results = [make_record({name: 3 for name in scoring.RUBRIC_CATEGORIES})]
+    weakest = scoring.summarize_progress(results).weakest_category
+    assert weakest in scoring.RUBRIC_CATEGORIES
+
+
+def test_progress_endpoint_returns_weakest_category(results_file: Path) -> None:
+    record = make_record(
+        {
+            "Clarifying questions": 4,
+            "Decomposition": 2,
+            "Risk identification": 4,
+            "Communication": 4,
+        }
+    )
+    results_file.write_text(json.dumps([record]), encoding="utf-8")
+    assert client.get("/progress").json()["weakest_category"] == "Decomposition"
