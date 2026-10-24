@@ -22,7 +22,9 @@ def results_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def write_totals(path: Path, totals: list[int]) -> None:
-    records = [{"round": "decomposition", "question_id": "q", "total": t, "max": 20} for t in totals]
+    records = [
+        {"round": "decomposition", "question_id": "q", "total": t, "max": 20} for t in totals
+    ]
     path.write_text(json.dumps(records), encoding="utf-8")
 
 
