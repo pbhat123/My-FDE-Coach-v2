@@ -140,3 +140,24 @@ def test_weakest_category_ignores_old_records_but_still_counts_them() -> None:
     assert result.weakest_category == "Communication"
     assert result.rounds_practised == 2
     assert result.average_total == 16.5  # (20 + 13) / 2
+
+
+# --- T5: ties go to the first category in rubric order ---------------------
+
+
+def test_weakest_category_tie_returns_first_in_rubric_order() -> None:
+    scores = {**EVEN_SCORES, "Decomposition": 2, "Communication": 2}
+    result = scoring.summarize_progress([make_record(scores)])
+    assert result.weakest_category == "Decomposition"
+
+
+def test_weakest_category_all_equal_returns_first_rubric_category() -> None:
+    result = scoring.summarize_progress([make_record(EVEN_SCORES)])
+    assert result.weakest_category == scoring.RUBRIC_CATEGORIES[0]
+
+
+def test_weakest_category_tie_does_not_depend_on_entry_order() -> None:
+    scores = {**EVEN_SCORES, "Decomposition": 2, "Communication": 2}
+    reversed_scores = dict(reversed(scores.items()))
+    result = scoring.summarize_progress([make_record(reversed_scores)])
+    assert result.weakest_category == "Decomposition"
