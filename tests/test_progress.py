@@ -31,7 +31,11 @@ def write_totals(path: Path, totals: list[int]) -> None:
 def test_progress_empty_results_returns_zeros(results_file: Path) -> None:
     resp = client.get("/progress")
     assert resp.status_code == 200
-    assert resp.json() == {"rounds_practised": 0, "average_total": 0.0}
+    assert resp.json() == {
+        "rounds_practised": 0,
+        "average_total": 0.0,
+        "weakest_category": None,
+    }
 
 
 def test_summarize_progress_empty_list_does_not_divide_by_zero() -> None:
@@ -43,7 +47,11 @@ def test_summarize_progress_empty_list_does_not_divide_by_zero() -> None:
 def test_progress_single_result(results_file: Path) -> None:
     write_totals(results_file, [12])
     body = client.get("/progress").json()
-    assert body == {"rounds_practised": 1, "average_total": 12.0}
+    assert body == {
+        "rounds_practised": 1,
+        "average_total": 12.0,
+        "weakest_category": None,
+    }
 
 
 def test_progress_counts_and_averages(results_file: Path) -> None:

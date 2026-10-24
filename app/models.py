@@ -47,3 +47,4 @@ class ProgressResponse(BaseModel):
 
     rounds_practised: int
     average_total: float
+    weakest_category: str | None = None
